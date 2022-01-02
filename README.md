@@ -1,6 +1,6 @@
 # Shitcoin_Ticker
 
-This is a simple coin ticker that connects to `api.kraken.com` to get the trade data. This is a public api so account at kraken.com is needed.
+This is a simple coin ticker that connects to `api.kraken.com` to get the trade data. This is a public api so no account at kraken.com is needed.
 
 Included is the public SSL key cypher block so the connection is secure until the SSL certificate becomes invalid.
 
