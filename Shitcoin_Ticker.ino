@@ -64,7 +64,6 @@ void setup() {
     lcd.setTextDatum(textdatum_t::top_center);
     lcd.setTextColor(0xFFFF00U, 0x000000U);
     lcd.setFont(&fonts::Font4);
-
     lcd.drawString("connecting WiFi",  lcd.width() / 2,  0);
 
     ESP_LOGI(TAG, "connecting to %s\n", SSID);
@@ -89,14 +88,13 @@ void setup() {
     ESP_LOGI(TAG, "synced NTP");
     //lcd.setFont(&fonts::Font7);
     lcd.setTextColor(0xFFFF00U, 0x000000U);
-    const String header = "    " + coinName + " @ kraken.com" + "    ";
-    lcd.drawString(header, lcd.width() / 2,  0);
+    lcd.drawString("    " + coinName + " @ kraken.com" + "    ", lcd.width() / 2,  0);
 
     getTradesSince(time(NULL) - (10 * 60));
 }
 
 void loop() {
-    static const int DELAY_SECONDS = 1;
+    static const int DELAY_SECONDS {1};
 
     delay(DELAY_SECONDS * 1000);
     getTradesSince(time(NULL) - DELAY_SECONDS);
@@ -104,7 +102,7 @@ void loop() {
 
 void getTradesSince(const time_t tm) {
 
-    static const String BASE_URL = "https://api.kraken.com/0/public/Trades?pair=" + coinName + "&since=";
+    static const String BASE_URL {"https://api.kraken.com/0/public/Trades?pair=" + coinName + "&since="};
 
     WiFiClientSecure secureClient;
 
@@ -126,13 +124,13 @@ void getTradesSince(const time_t tm) {
 
         http.setTimeout(1000);
 
-        const int HTTP_RESULT = http.GET();
+        const int HTTP_RESULT {http.GET()};
 
         switch (HTTP_RESULT) {
             case HTTP_CODE_OK :
                 {
                     static SpiRamJsonDocument doc(JSON_BUFFER_SIZE);
-                    const DeserializationError JSON_ERROR = deserializeJson(doc, http.getStream());
+                    const DeserializationError JSON_ERROR {deserializeJson(doc, http.getStream())};
 
                     if (JSON_ERROR) {
                         ESP_LOGE(TAG, "deserializeJson() failed: %s", JSON_ERROR.c_str());
@@ -144,17 +142,16 @@ void getTradesSince(const time_t tm) {
                         //Serial.end();
 
                         //find the last trade
-                        int currentTrade = 0;
+                        int currentTrade {0};
                         while (!doc["result"][coinName][currentTrade][0].isNull())
                             currentTrade++;
 
-                        static String lastPrice{0};
+                        static String lastPrice{""};
 
-                        if (currentTrade) {
-                            currentTrade--;
-                            ESP_LOGI(TAG, "last price: %s", doc["result"][coinName][currentTrade][0].as<String>().c_str());
-                            displayPrice(doc["result"][coinName][currentTrade][0].as<String>(), true);
+                        if (currentTrade--) {
                             lastPrice = doc["result"][coinName][currentTrade][0].as<String>();
+                            ESP_LOGI(TAG, "last price: %s", lastPrice.c_str());
+                            displayPrice(lastPrice, true);
                         }
                         else {
                             displayPrice(lastPrice, false);
@@ -171,31 +168,26 @@ void getTradesSince(const time_t tm) {
     secureClient.flush();
 }
 
-void displayPrice(const String& price, const bool refreshDate) {
+void displayPrice(const String& priceStr, const bool refreshDate) {
 
-    static float lastPrice{0};
+    static float lastPrice {0};
 
-    const float currentPrice = strtof(price.c_str(), NULL);
+    const float currentPrice {strtof(priceStr.c_str(), NULL)};
 
-    const int color = (lastPrice > currentPrice) ? TFT_RED : (lastPrice < currentPrice) ? TFT_GREEN : TFT_WHITE;
+    const int color {(lastPrice > currentPrice) ? TFT_RED : (lastPrice < currentPrice) ? TFT_GREEN : TFT_WHITE};
 
     lastPrice = currentPrice;
+
+    int length {6};
+    switch (priceStr.indexOf('.')) {
+        case 1 :
+        case 5 : length = 5;
+    }
 
     lcd.setTextDatum(textdatum_t::middle_center);
     lcd.setTextColor(color, 0x000000U);
     lcd.setFont(&fonts::Font8);
-
-    int length = 0;
-    switch (price.indexOf('.')) {
-        case 1 : length = 5; break;
-        case 2 : //length = 6; break;
-        case 3 : //length = 6; break;
-        case 4 : length = 6; break;
-        case 5 : length = 5; break;
-        default: length = 6;
-    }
-
-    lcd.drawString(price.substring(0, length), lcd.width() / 2, lcd.height() / 2);
+    lcd.drawString(priceStr.substring(0, length), lcd.width() / 2, lcd.height() / 2);
 
     if (!refreshDate) return;
 
@@ -203,7 +195,9 @@ void displayPrice(const String& price, const bool refreshDate) {
     time_t rawtime;
     time(&rawtime);
 
-    const struct tm* timeinfo = localtime(&rawtime);
+    const struct tm* timeinfo {
+        localtime(&rawtime)
+    };
 
     lcd.setTextDatum(textdatum_t::top_center);
     lcd.setFont(&fonts::Roboto_Thin_24);
