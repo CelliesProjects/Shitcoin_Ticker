@@ -203,5 +203,5 @@ void displayPrice(const String& priceStr, const bool refreshDate) {
     lcd.setFont(&fonts::Roboto_Thin_24);
     lcd.setTextColor(0xFFFF00U, 0x000000U);
     lcd.drawString("Last price received:", lcd.width() / 2, 180);
-    lcd.drawString(asctime(timeinfo), lcd.width() / 2, 210);
+    lcd.drawString("  " + String(asctime(timeinfo)) + "  ", lcd.width() / 2, 210);
 }
